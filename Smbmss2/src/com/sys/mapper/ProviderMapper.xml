@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sys.mapper.ProviderMapper">
+    <!-- 二级缓存 设置参数 -->
+	<cache type="org.mybatis.caches.ehcache.EhcacheCache"/> 
+   <!--查询  -->
+	<select id="getALLProviders" resultType="Provider">
+		select * from smbms_provider;
+	</select><!--供应商名的模糊查询  -->
+	<select id="getProviderByName" resultType="Provider" parameterType="String">
+	<!-- OGNL表达式#{} -->
+	   <!--  select * from smbms_provider where proName like #{proName}; -->
+	    select * from smbms_provider where proName like concat('%',#{proName},'%'); 
+	</select>
+	<!--供应商名的多条件查询  -->
+	<select id="getProviderByNameAndRole" resultType="Provider" parameterType="Provider">
+	<!-- OGNL表达式#{} -->	   
+	    select * from smbms_provider where proName like concat('%',#{proName},'%') and proCode=#{proCode}; 
+	</select>
+	<!-- resultMap映射配置 
+	  1.SQL的列投影
+	-->
+	 <resultMap type="Provider" id="ProviderModel">
+	    <id property="id" column="id2"></id>
+	    <result property="proName" column="proName"/>
+	    <result property="proCode" column="proCode"/>
+	</resultMap>
+	<select id="getProviderByMap" resultMap="ProviderModel">
+	   select id as id2,proName from smbms_provider;
+	</select> 
+	
+	<!-- 增加 -->	
+	<insert id="add" parameterType="Provider">
+	   INSERT  INTO smbms_provider(id,proCode,proName,proDesc,proContact,proPhone,proAddress,
+	   proFax,createdBy,creationDate,modifyDate,modifyBy) 
+	   VALUES(#{id},#{proCode},#{proName},#{proDesc},#{proContact},#{proPhone},#{proAddress},
+	   #{proFax},#{createdBy},#{creationDate},#{modifyDate},#{modifyBy})
+	</insert>
+	<!-- 修改 -->	
+	<!--<update id="modify" parameterType="Provider">
+	     update smbms_provider set proCode=#{proCode},proName=#{proName},proDesc=#{proDesc},proContact=#{proContact},proPhone=#{proPhone},
+	     proAddress=#{proAddress},proFax=#{proFax},createdBy=#{createdBy},creationDate=#{creationDate},modifyDate=#{modifyDate},modifyBy=#{modifyBy}
+	     where id=#{id}
+	</update>-->
+	<!-- 删除 -->
+	<delete id="del" parameterType="int">
+	   delete from smbms_provider where id=#{id}
+	</delete>
+	
+	<!-- 修改 if+set -->	
+	<update id="updateProviderById" parameterType="Provider">
+	   update smbms_provider
+	   <set>
+	      <if test="proPhone!=null and proPhone!=''">
+	         proPhone=#{proPhone},
+	      </if>
+	      <if test="createdBy!=null and createdBy!=0">
+	         createdBy=#{createdBy},
+	      </if>
+	   </set>	   
+	   where id=#{id}
+	</update>
+	
+	<!-- 7.批量删除 FOREACH标签 一般配合in使用-->
+	<delete id="delProviders" parameterType="java.util.List">
+		DELETE FROM smbms_provider WHERE id IN 
+		<foreach collection="list" item="id" open="(" close=")" separator=",">
+			<!-- #{id.id} -->
+			#{id}
+		</foreach>
+  		<!-- (10,11,12,13,15); -->
+	</delete>
+   <!-- 时间查询choose(when) -->
+    <!-- <select id="getProviderByChoose" resultType="Provider" parameterType="com.sys.vo.ProviderVo">
+       SELECT <include refid="smbms_provider"></include> 
+	FROM  smbms_provider 
+		WHERE creationDate BETWEEN #{creationDate} AND 
+		<choose>
+			<when test="endCreadtionDate != null and endCreadtionDate != ''">
+				#{endCreadtionDate}
+			</when>
+			<otherwise>
+				now()
+			</otherwise>
+		</choose>
+	</select>
+	9. SQL标签  公用语句
+	<sql id="smbms_provider">
+		id,proName,proCode
+	</sql>  -->
+	<!-- 通过proId获取Provider -->
+	 <select id="getProviderById" resultType="Provider" parameterType="int">
+	   select * from smbms_provider where id=#{id}
+	</select> 
+</mapper>

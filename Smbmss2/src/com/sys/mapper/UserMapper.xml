@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sys.mapper.UserMapper">
+    <!-- 1.注册增加用户 -->
+   <insert id="addUser" parameterType="User">
+      INSERT  INTO smbms_user(id,userCode,userName,userPassword,gender,birthday,phone,address,userRole,createdBy,creationDate)
+       VALUES (#{id},#{userCode},#{userName},#{userPassword},#{gender},#{birthday},#{phone},#{address},#{userRole},#{createdBy},#{creationDate});
+   </insert>
+   <select id="getUserByWhere" resultType="User" parameterType="User">
+       select * from smbms_user 
+       <where>
+          <if test="userCode !=null and userCode !=''">
+            and userCode like concat('%',#{userCode},'%')
+          </if>
+          <if test="id !=0 and id !=null">
+              and id = #{id}
+          </if>
+          <if test="userName !=null and userName !=''">
+             and userName like concat('%',#{userName},'%') 
+          </if> 
+          <if test="userRole!=null and userRole!=''">
+             and userRole=#{userRole}
+          </if> 
+       </where>                   
+   </select>
+   <!-- 3.通过条件查询-用户表记录数 -->
+   <select id="getUserCountByUser" resultType="int" parameterType="User">
+      select count(*) from smbms_user where  gender=#{gender};     
+   </select>
+   <!-- 4.通过userId删除user -->
+   <delete id="deleteUserById" parameterType="int">
+      delete from smbms_user where id=#{id};
+   </delete>
+   <!-- 5.修改用户信息 -->
+   <update id="modifyUser" parameterType="User">
+       update smbms_user set userCode=#{userCode},userName=#{userName},userPassword=#{userPassword}
+       ,gender=#{gender},birthday=#{birthday},phone=#{phone},address=#{address},userRole=#{userRole}
+       ,createdBy=#{createdBy},creationDate=#{creationDate} where id=#{id}
+   </update>
+   <!-- 6.修改当前用户密码 -->
+   <update id="updatePwd" parameterType="User">
+      update smbms_user set userPassword=#{userPassword} where userName=#{userName}
+   </update>
+   <!-- 7.删除批量用户 -->
+   <delete id="deleteUsersByList">
+      delete from smbms_user where id in
+      <foreach collection ="list" item="listUserId" open="(" separator="," close=")">
+         #{listUserId}
+      </foreach>
+   </delete>
+   <!-- 一对一高级映射 -->
+   <resultMap id="userInfo" type="User">
+       <id property="id" column="id"></id>
+       <association property="role" javaType="Role"
+           column="userRole" select="getRoleInfo"
+       >
+          <!-- <result property="roleName" column="roleName"/> -->
+       </association>
+    <!-- 一对 多高级映射 -->
+       <collection property="addressList" ofType="Address"
+          column="address" select="getAddressInfo"
+       >
+          
+       </collection>  
+       <!-- <collection property="addressList" ofType="Address">
+          <id column="aid" property="id"></id>
+          <result column="contact" property="contact"/>
+          <result column="addressDesc" property="addressDesc"/>
+       </collection> -->   
+   </resultMap>
+   <!-- 一对一高级映射 -->
+   <select id="getUserInfo" resultMap="userInfo">
+      select u.*,r.roleName from smbms_user u,smbms_role r
+      where u.userRole=r.id
+   </select>
+    <!-- 一对 多高级映射 -->   
+   <select id="getUserByCollection" resultMap="userInfo">
+      select u.*,a.*,u.id as uid,a.id as aid from smbms_user u,smbms_address a
+      where u.id=a.userId and u.id=#{id}
+   </select>
+   <!-- 3.通过id查询Role信息 -->
+	<select id="getRoleInfo" resultType="Role" parameterType="int">
+		SELECT * FROM smbms_role WHERE id = #{rid}
+	</select>
+	<!-- 4.通过userid查询地址 -->
+	<select id="getAddressInfo" resultType="Address" parameterType="int">
+		SELECT * FROM smbms_address WHERE id =#{aid}
+	</select>
+	
+   <!-- 通过userCode获取User -->
+    <select id="getUserByUserCode" resultType="User" parameterType="String">
+       SELECT * FROM smbms_user WHERE userCode=#{userCode} 
+    </select>
+   <!-- 通过条件查询-userList-->
+     <select id="getAllUser" resultType="User">
+      SELECT * FROM smbms_user
+      <!-- <trim prefix="where" prefixOverrides="and/or" suffix="" suffixOverrides=""> -->
+      <where>
+         <if test="userName!=null and userName!=''">
+            and userName like concat('%',#{userName},'%')
+         </if> 
+         <if test="userRole!=0 and userRole!=''">
+            and userRole=#{userRole}
+         </if>
+         <if test="currentPageNo!=0 and currentPageNo!=''">
+            and currentPageNo=#{currentPageNo}
+         </if>
+         <if test="pageSize!=0 and pageSize!=''">
+            and pageSize=#{pageSize}
+         </if>
+      </where>
+      
+      <!-- </trim> -->
+   </select>  
+     <!-- //通过条件查询-用户表记录数 -->
+   <select id="getUserCount" resultType="int">
+       select count(*) from smbms_user
+       <where>
+         <if test="userName!=null and userName!=''">
+            and userName=#{userName}
+         </if>
+         <if test="userRole!=null and userRole!=''">
+            and userRole=#{userRole}
+         </if>
+       </where>        
+   </select> 
+      <!-- 通过userId获取user-->
+   <select id="getUserById" resultType="User" parameterType="int">
+       select * from smbms_user where id=#{id} 
+   </select>
+   <!-- 6.修改当前用户密码-->
+   <update id="updatePwdByIdAndPwd" parameterType="User">
+      update smbms_user 
+      <set>
+         <if test="userPassword!=null and userPassword!=''">
+            userPassword=#{userPassword},
+         </if>
+      </set>
+      where id=#{id} 
+   </update>    
+</mapper>
