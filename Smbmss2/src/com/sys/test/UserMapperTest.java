@@ -2,7 +2,9 @@ package com.sys.test;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.ibatis.io.Resources;
@@ -229,5 +231,11 @@ public class UserMapperTest {
     	for(User _user:list) {
     		System.out.println(_user);
     	}    	   		   	
+    }
+    @Test
+    public void m07() {
+    	SimpleDateFormat sdf=new SimpleDateFormat("YYYY-MM-DD");
+    	Date date=new Date();
+    	String str=sdf.format(date);
     }
 }
